@@ -13,6 +13,14 @@ from models import GNNCASimple
 from modules.ca import *
 from voronoi.measures import shannon_entropy, word_entropy
 
+# Configuration
+n_cells = 1000
+steps = 1000
+threshold = 0.42
+epochs = 100
+batch_size = 32
+
+
 # tf.config.run_functions_eagerly(True)
 physical_devices = tf.config.list_physical_devices("GPU")
 if len(physical_devices) > 0:
@@ -83,14 +91,7 @@ def run(gca):
     return np.array((Hs_test_true, Hw_test_true)), np.array(entropies), model
 
 
-if __name__ == "__main__":
-    # Configuration
-    n_cells = 1000
-    steps = 1000
-    threshold = 0.42
-    epochs = 100
-    batch_size = 32
-
+def run_voronoi_entropy():
     gca = VoronoiCA(n_cells, mu=0, sigma=threshold)
     H_true, H_pred, model = run(gca)
     np.savez("results/learn_gca_entropy_change.npz", H_true=H_true, H_pred=H_pred)
@@ -126,3 +127,7 @@ if __name__ == "__main__":
     plt.savefig("results/learn_gca_entropy_change_plot.pdf", bbox_inches="tight")
 
     plt.show()
+
+
+if __name__ == "__main__":
+    run_voronoi_entropy()

@@ -79,9 +79,9 @@ class VoronoiCA(CA):
 
         return np.array(states)
 
-    def plot(self, state: np.ndarray):
+    def plot(self, state: np.ndarray, fig=None):
         if self.fig is None:
-            self.fig = plt.figure()
+            self.fig = fig if fig is not None else plt.figure()
             self.ax = self.fig.gca()
             self.voronoi = Voronoi(self.graph.x)
             self.polygons = voronoi_utils.voronoi_polygons(self.voronoi)

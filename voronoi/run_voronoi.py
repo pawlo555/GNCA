@@ -8,6 +8,14 @@ from tqdm import tqdm
 
 from models import GNNCASimple
 from modules.ca import *
+import matplotlib.pyplot as plt
+
+# Configuration
+n_cells = 1000
+threshold = 0.50
+repetitions = 1
+epochs = 1000
+batch_size = 128
 
 # tf.config.run_functions_eagerly(True)
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -20,11 +28,14 @@ def run(gca):
     optimizer = Adam(learning_rate=1e-2)
     loss_fn = BinaryCrossentropy()
 
-    @tf.function
     def train_step(state, next_state):
         with tf.GradientTape() as tape:
             out = model([state, a], training=True)
+            print(state[0][:50].reshape(-1))
+            print(next_state[0][:50].reshape(-1))
+            print(out[0][:50].numpy().reshape(-1))
             loss = loss_fn(next_state, out) + sum(model.losses)
+            print(loss)
 
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -68,20 +79,14 @@ def run(gca):
     return np.array(history), model
 
 
-if __name__ == "__main__":
-    # Configuration
-    n_cells = 1000
-    threshold = 0.42
-    epochs = 1000
-    batch_size = 32
-    repetitions = 1
-
+def voronoi_main():
     histories = []
+    model = None
     for _ in range(repetitions):
         gca = VoronoiCA(n_cells, mu=0, sigma=threshold)
         history, model = run(gca)
         histories.append(history)
-    np.savez("results/learn_gca_loss_v_epoch.npz", histories=histories)
+    #np.savez("results/learn_gca_loss_v_epoch.npz", histories=histories)
 
     hist_mean = np.median(histories, 0)
     hist_std = stats.median_absolute_deviation(histories, 0)
@@ -114,7 +119,7 @@ if __name__ == "__main__":
     plt.xscale("log")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("results/learn_gca_loss_v_epoch.pdf", bbox_inches="tight")
+    #plt.savefig("results/learn_gca_loss_v_epoch.pdf", bbox_inches="tight")
 
     plt.figure(figsize=(3, 3))
     cmap = plt.get_cmap("Set2")
@@ -141,6 +146,11 @@ if __name__ == "__main__":
     plt.legend()
     plt.xscale("log")
     plt.tight_layout()
-    plt.savefig("results/learn_gca_acc_v_epoch.pdf", bbox_inches="tight")
+    #plt.savefig("results/learn_gca_acc_v_epoch.pdf", bbox_inches="tight")
 
     plt.show()
+    return model
+
+
+if __name__ == "__main__":
+    voronoi_main()
