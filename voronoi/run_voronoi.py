@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 n_cells = 1000
 threshold = 0.50
 repetitions = 1
-epochs = 1000
+epochs = 200
 batch_size = 128
 
 # tf.config.run_functions_eagerly(True)
