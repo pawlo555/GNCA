@@ -4,7 +4,7 @@ from spektral.layers.ops import sp_matrix_to_sp_tensor
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.metrics import binary_accuracy
 from tensorflow.keras.optimizers import Adam
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 from models import GNNCASimple
 from modules.ca import *
@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 n_cells = 1000
 threshold = 0.50
 repetitions = 1
-epochs = 200
 batch_size = 128
 
 # tf.config.run_functions_eagerly(True)
@@ -23,7 +22,7 @@ if len(physical_devices) > 0:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
-def run(gca):
+def run(gca, epochs):
     model = GNNCASimple(activation="sigmoid", batch_norm=False)
     optimizer = Adam(learning_rate=1e-2)
     loss_fn = BinaryCrossentropy()
@@ -31,11 +30,11 @@ def run(gca):
     def train_step(state, next_state):
         with tf.GradientTape() as tape:
             out = model([state, a], training=True)
-            print(state[0][:50].reshape(-1))
-            print(next_state[0][:50].reshape(-1))
-            print(out[0][:50].numpy().reshape(-1))
+            # print(state[0][:50].reshape(-1))
+            # print(next_state[0][:50].reshape(-1))
+            # print(out[0][:50].numpy().reshape(-1))
             loss = loss_fn(next_state, out) + sum(model.losses)
-            print(loss)
+            # print(loss)
 
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -62,7 +61,7 @@ def run(gca):
 
     # Train
     history = []
-    for epoch in tqdm(range(epochs)):
+    for epoch in (pbar := tqdm(range(epochs))):
         state, next_state = get_batch(batch_size)
         out, loss, acc = train_step(state, next_state)
 
@@ -71,20 +70,17 @@ def run(gca):
         out_val, loss_val, acc_val = evaluate(state_val, next_state_val)
 
         history.append((loss, loss_val, acc, acc_val))
-        tqdm.write(
-            f"Epoch {epoch} Loss = {loss:.3e}, Acc = {100*acc:.2f}, "
-            f"Loss val = {loss_val:.3e}, Acc val={100*acc_val:.2f}  "
-        )
+        pbar.set_description(f"Accuracy: train = {100*acc:.2f}, val={100*acc_val:.2f}")
 
     return np.array(history), model
 
 
-def voronoi_main():
+def voronoi_main(epochs=100):
     histories = []
     model = None
     for _ in range(repetitions):
         gca = VoronoiCA(n_cells, mu=0, sigma=threshold)
-        history, model = run(gca)
+        history, model = run(gca, epochs)
         histories.append(history)
     #np.savez("results/learn_gca_loss_v_epoch.npz", histories=histories)
 

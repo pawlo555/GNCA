@@ -4,7 +4,7 @@ from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 from spektral import utils
 from spektral.data import Dataset, Graph
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 class Boids:
