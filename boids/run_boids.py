@@ -23,10 +23,10 @@ if len(physical_devices) > 0:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
-def boids_main():
-    data_tr = make_dataset(300, 300, n_boids=100, n_jobs=-1)
-    data_va = make_dataset(30, 300, n_boids=100, n_jobs=-1)
-    data_te = make_dataset(30, 300, n_boids=100, n_jobs=-1)
+def boids_main(n_boids=100, epochs=100):
+    data_tr = make_dataset(300, 300, n_boids=n_boids, n_jobs=-1)
+    data_va = make_dataset(30, 300, n_boids=n_boids, n_jobs=-1)
+    data_te = make_dataset(30, 300, n_boids=n_boids, n_jobs=-1)
     
     model = GNNCASimpleBoids(
         activation="linear",
@@ -46,7 +46,7 @@ def boids_main():
     history = model.fit(
         loader_tr.load(),
         steps_per_epoch=loader_tr.steps_per_epoch,
-        epochs=100,
+        epochs=epochs,
         validation_data=loader_va.load(),
         validation_steps=loader_va.steps_per_epoch,
         callbacks=[
